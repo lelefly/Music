@@ -14,9 +14,10 @@ public class Demo {
     System.loadLibrary("postproc-54");
     System.loadLibrary("avfilter-6");
     System.loadLibrary("avdevice-57");
-
   }
 
   public native void testFFmpeg();
+
+  public native void mutexThread();
 
 }
