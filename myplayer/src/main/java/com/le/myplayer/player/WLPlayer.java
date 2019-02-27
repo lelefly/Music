@@ -47,6 +47,18 @@ public class WLPlayer {
     }).start();
   }
 
+  public void start(){
+    if(TextUtils.isEmpty(source)){
+        MyLog.d("source empty");
+        return;
+    }
+    new Thread(new Runnable() {
+      @Override public void run() {
+        n_start();
+      }
+    }).start();
+  }
+
   public void onCallPrepared() {
     if (onPrepareListener != null) {
       onPrepareListener.onPrepared();
@@ -54,4 +66,6 @@ public class WLPlayer {
   }
 
   public native void n_prepared(String source);
+
+  public native void n_start();
 }

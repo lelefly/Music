@@ -23,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
     wlPlayer.setOnPrepareListener(new WLOnPrepareListener() {
       @Override public void onPrepared() {
         MyLog.d("onPrepared");
+        wlPlayer.start();
       }
     });
   }
