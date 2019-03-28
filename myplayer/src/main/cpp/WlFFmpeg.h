@@ -18,14 +18,15 @@ class WlFFmpeg {
 
 public:
     WlCallJava *callJava = NULL;
-    const char* url = NULL;
-    pthread_t  decodeThread;
+    const char *url = NULL;
+    pthread_t decodeThread;
     AVFormatContext *pFormatContext;
     WlAudio *audio = NULL;
     WlPlaystatus *playstatus = NULL;
 
 public:
-    WlFFmpeg(WlPlaystatus *playstatus1,WlCallJava *callJava, const char *url);
+    WlFFmpeg(WlPlaystatus *playstatus1, WlCallJava *callJava, const char *url);
+
     ~WlFFmpeg();
 
     void prepared();
@@ -33,6 +34,10 @@ public:
     void decodeFFmpegThread();
 
     void start();
+
+    void pause();
+
+    void resume();
 };
 
 

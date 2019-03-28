@@ -20,13 +20,20 @@ public:
     JNIEnv *jniENV = NULL;
     jobject jobj;
 
-    jmethodID  jmid_prepared;
+    jmethodID jmid_prepared;
+    jmethodID jmid_load;
+    jmethodID jmid_timeinfo;
 
 public:
-    WlCallJava(JavaVM *javaVM,JNIEnv *env,jobject *obj);
+    WlCallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj);
+
     ~WlCallJava();
 
     void onCallPrepared(int type);
+
+    void onCallLoad(int type, bool load);
+
+    void onCallTimeInfo(int type, int curr, int total);
 };
 
 

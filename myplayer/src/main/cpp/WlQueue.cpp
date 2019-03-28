@@ -18,9 +18,6 @@ WlQueue::~WlQueue() {
 int WlQueue::putAvpacket(AVPacket *packet) {
     pthread_mutex_lock(&mutexPacket);
     queuePacket.push(packet);
-    if (LOG_DEBUG) {
-        LOGD("放入 avpacket 到队列 ，个数 %d", queuePacket.size())
-    }
     pthread_cond_signal(&condPacket);
     pthread_mutex_unlock(&mutexPacket);
     return 0;
@@ -38,9 +35,6 @@ int WlQueue::getAvpacket(AVPacket *packet) {
             av_packet_free(&avPacket);
             av_free(avPacket);
             avPacket = NULL;
-            if (LOG_DEBUG) {
-                LOGD("取出Avpacket 还剩 %d", queuePacket.size());
-            }
             break;
         } else {
             LOGE("wait");

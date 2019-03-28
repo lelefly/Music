@@ -39,9 +39,12 @@ void WlFFmpeg::decodeFFmpegThread() {
     for (int i = 0; i < pFormatContext->nb_streams; i++) {
         if (pFormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
             if (audio == NULL) {
-                audio = new WlAudio(playstatus);
+                audio = new WlAudio(playstatus, pFormatContext->streams[i]->codecpar->sample_rate,
+                                    callJava);
                 audio->streamIndex = i;
                 audio->codePar = pFormatContext->streams[i]->codecpar;
+                audio->duration = pFormatContext->duration / AV_TIME_BASE;
+                audio->time_base = pFormatContext->streams[i]->time_base;
             }
         }
     }
@@ -85,40 +88,49 @@ void WlFFmpeg::start() {
         }
         return;
     }
-
+    audio->play();
     int count = 0;
-    while (1) {
+    while (playstatus != NULL && !playstatus->exit) {
         AVPacket *avPacket = av_packet_alloc();
         if (av_read_frame(pFormatContext, avPacket) == 0) {
             if (avPacket->stream_index == audio->streamIndex) {
                 count++;
-                if (LOG_DEBUG) {
-                    LOGD("解码第 %d", count);
-                }
                 audio->queue->putAvpacket(avPacket);
             } else {
                 av_packet_free(&avPacket);
                 av_free(avPacket);
+                avPacket = NULL;
             }
         } else {
-            if(LOG_DEBUG)
-            {
+            if (LOG_DEBUG) {
                 LOGE("decode finished");
             }
             av_packet_free(&avPacket);
             av_free(avPacket);
-            break;
+            avPacket = NULL;
+            while (playstatus != NULL && !playstatus->exit) {
+                if (audio->queue->getQueueSize() > 0) {
+                    continue;
+                } else {
+                    playstatus->exit = true;
+                    break;
+                }
+            }
         }
-    }
-
-    while (audio->queue->getQueueSize() > 0) {
-        AVPacket *avPacket = av_packet_alloc();
-        audio->queue->getAvpacket(avPacket);
-        av_packet_free(&avPacket);
-        av_free(avPacket);
-        avPacket = NULL;
     }
     if (LOG_DEBUG) {
         LOGD("解码完成");
+    }
+}
+
+void WlFFmpeg::pause() {
+    if (audio != NULL) {
+        audio->pause();
+    }
+}
+
+void WlFFmpeg::resume() {
+    if (audio != NULL) {
+        audio->resume();
     }
 }
