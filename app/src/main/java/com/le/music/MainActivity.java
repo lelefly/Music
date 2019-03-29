@@ -75,6 +75,10 @@ public class MainActivity extends AppCompatActivity {
     wlPlayer.resume();
   }
 
+  public void stop(View view) {
+    wlPlayer.stop();
+  }
+
   Handler handler = new Handler() {
     @Override public void handleMessage(Message msg) {
       super.handleMessage(msg);
@@ -86,4 +90,5 @@ public class MainActivity extends AppCompatActivity {
       }
     }
   };
+
 }

@@ -75,6 +75,9 @@ public:
 
     void resume();
 
+    void stop();
+
+    void release();
 };
 
 

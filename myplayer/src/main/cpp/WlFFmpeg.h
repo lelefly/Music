@@ -12,6 +12,7 @@
 extern "C"
 {
 #include <libavformat/avformat.h>
+#include <libavutil/time.h>
 };
 
 class WlFFmpeg {
@@ -23,6 +24,8 @@ public:
     AVFormatContext *pFormatContext;
     WlAudio *audio = NULL;
     WlPlaystatus *playstatus = NULL;
+    pthread_mutex_t init_mutex;
+    bool exit = false;
 
 public:
     WlFFmpeg(WlPlaystatus *playstatus1, WlCallJava *callJava, const char *url);
@@ -38,6 +41,8 @@ public:
     void pause();
 
     void resume();
+
+    void release();
 };
 
 

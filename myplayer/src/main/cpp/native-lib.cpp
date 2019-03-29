@@ -65,3 +65,23 @@ Java_com_le_myplayer_player_WLPlayer_n_1resume(JNIEnv *env, jobject instance) {
         fFmpeg->resume();
     }
 }
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_le_myplayer_player_WLPlayer_n_1stop(JNIEnv *env, jobject instance) {
+    if (fFmpeg != NULL) {
+        fFmpeg->release();
+        delete (fFmpeg);
+        fFmpeg = NULL;
+        if (callJava != NULL) {
+            delete (callJava);
+            callJava = NULL;
+        }
+
+        if (playstatus != NULL) {
+            delete (playstatus);
+            playstatus = NULL;
+        }
+    }
+
+}

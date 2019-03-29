@@ -13,6 +13,7 @@ public:
 
 public:
     WlPlaystatus();
+    ~WlPlaystatus();
 };
 
 

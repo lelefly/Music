@@ -7,6 +7,7 @@ WlFFmpeg::WlFFmpeg(WlPlaystatus *playstatus1, WlCallJava *callJava, const char *
     this->callJava = callJava;
     this->url = url;
     this->playstatus = playstatus1;
+    pthread_mutex_init(&init_mutex, NULL);
 }
 
 void *decodeFFmpeg(void *data) {
@@ -19,21 +20,37 @@ void WlFFmpeg::prepared() {
     pthread_create(&decodeThread, NULL, decodeFFmpeg, this);
 }
 
+int avformat_callback(void *ctx) {
+    WlFFmpeg *fFmpeg = static_cast<WlFFmpeg *>(ctx);
+    if (fFmpeg->playstatus->exit) {
+        return AVERROR_EOF;
+    }
+    return 0;
+}
+
 void WlFFmpeg::decodeFFmpegThread() {
+    pthread_mutex_lock(&init_mutex);
     av_register_all();
     avformat_network_init();
     pFormatContext = avformat_alloc_context();
+
+    pFormatContext->interrupt_callback.callback = avformat_callback;
+    pFormatContext->interrupt_callback.opaque = this;
     if (avformat_open_input(&pFormatContext, url, NULL, NULL) != 0) {
         if (LOG_DEBUG) {
             LOGD("can not open url :%s", url);
-            return;
         }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
+        return;
     }
     if (avformat_find_stream_info(pFormatContext, NULL) < 0) {
         if (LOG_DEBUG) {
             LOGD("can not find stream from url :%s", url);
-            return;
         }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
+        return;
     }
 
     for (int i = 0; i < pFormatContext->nb_streams; i++) {
@@ -54,6 +71,8 @@ void WlFFmpeg::decodeFFmpegThread() {
         if (LOG_DEBUG) {
             LOGE("can not find decoder");
         }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
         return;
     }
 
@@ -62,12 +81,16 @@ void WlFFmpeg::decodeFFmpegThread() {
         if (LOG_DEBUG) {
             LOGE("can not alloc new decoderctx")
         }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
         return;
     }
     if (avcodec_parameters_to_context(audio->codecContext, audio->codePar) < 0) {
         if (LOG_DEBUG) {
             LOGE("can not fill decoderctx");
         }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
         return;
     }
 
@@ -75,10 +98,12 @@ void WlFFmpeg::decodeFFmpegThread() {
         if (LOG_DEBUG) {
             LOGE("can not open audio stream");
         }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
         return;
     }
-
     callJava->onCallPrepared(CHILD_THREAD);
+    pthread_mutex_unlock(&init_mutex);
 }
 
 void WlFFmpeg::start() {
@@ -118,6 +143,7 @@ void WlFFmpeg::start() {
             }
         }
     }
+    exit = true;
     if (LOG_DEBUG) {
         LOGD("解码完成");
     }
@@ -133,4 +159,54 @@ void WlFFmpeg::resume() {
     if (audio != NULL) {
         audio->resume();
     }
+}
+
+void WlFFmpeg::release() {
+
+    if (playstatus->exit) {
+        return;
+    }
+    playstatus->exit = true;
+
+    pthread_mutex_lock(&init_mutex);
+
+    int sleepCount = 0;
+    while (!exit) {
+        if (sleepCount > 1000) {
+            exit = true;
+        }
+        if (LOG_DEBUG) {
+            LOGE("wait ffmpeg exit %d", sleepCount);
+        }
+        sleepCount++;
+        av_usleep(10 * 1000);
+    }
+
+    if (audio != NULL) {
+        audio->release();
+        delete (audio);
+        audio = NULL;
+    }
+
+    if (pFormatContext != NULL) {
+        avformat_close_input(&pFormatContext);
+        avformat_free_context(pFormatContext);
+        pFormatContext = NULL;
+
+        if (playstatus != NULL) {
+            playstatus = NULL;
+        }
+
+        if (callJava != NULL) {
+            callJava = NULL;
+        }
+
+    }
+
+    pthread_mutex_unlock(&init_mutex);
+
+}
+
+WlFFmpeg::~WlFFmpeg() {
+
 }

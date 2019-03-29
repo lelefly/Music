@@ -94,6 +94,14 @@ public class WLPlayer {
     }
   }
 
+  public void stop() {
+    new Thread(new Runnable() {
+      @Override public void run() {
+        n_stop();
+      }
+    }).start();
+  }
+
   public void onCallPrepared() {
     if (onPrepareListener != null) {
       onPrepareListener.onPrepared();
@@ -124,4 +132,6 @@ public class WLPlayer {
   private native void n_pause();
 
   private native void n_resume();
+
+  private native void n_stop();
 }
