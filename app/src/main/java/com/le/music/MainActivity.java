@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 import com.le.myplayer.WlTimeInfoBean;
+import com.le.myplayer.listener.WlOnErrorlistener;
 import com.le.myplayer.listener.WlOnTimeInfoListener;
 import com.le.myplayer.log.MyLog;
 import com.le.myplayer.player.WLPlayer;
@@ -60,10 +61,16 @@ public class MainActivity extends AppCompatActivity {
         handler.sendMessage(message);
       }
     });
+
+    wlPlayer.setOnErrorlistener(new WlOnErrorlistener() {
+      @Override public void onError(int code, String msg) {
+        MyLog.d(code + "---" + msg);
+      }
+    });
   }
 
   public void begin(View view) {
-    wlPlayer.setSource("http://mpge.5nd.com/2015/2015-11-26/69708/1.mp3");
+    wlPlayer.setSource("http://mpge.5nd.com/2015/2015-11-26/69708/1.mp31");
     wlPlayer.prepared();
   }
 
@@ -90,5 +97,4 @@ public class MainActivity extends AppCompatActivity {
       }
     }
   };
-
 }

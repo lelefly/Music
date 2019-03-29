@@ -39,6 +39,7 @@ void WlFFmpeg::decodeFFmpegThread() {
     if (avformat_open_input(&pFormatContext, url, NULL, NULL) != 0) {
         if (LOG_DEBUG) {
             LOGD("can not open url :%s", url);
+            callJava->onCallError(CHILD_THREAD, 1001, "can not open url");
         }
         exit = true;
         pthread_mutex_unlock(&init_mutex);
@@ -47,6 +48,7 @@ void WlFFmpeg::decodeFFmpegThread() {
     if (avformat_find_stream_info(pFormatContext, NULL) < 0) {
         if (LOG_DEBUG) {
             LOGD("can not find stream from url :%s", url);
+            callJava->onCallError(CHILD_THREAD, 1002, "can not find stream from url");
         }
         exit = true;
         pthread_mutex_unlock(&init_mutex);
@@ -70,6 +72,7 @@ void WlFFmpeg::decodeFFmpegThread() {
     if (!dec) {
         if (LOG_DEBUG) {
             LOGE("can not find decoder");
+            callJava->onCallError(CHILD_THREAD, 1003, "can not find decoder");
         }
         exit = true;
         pthread_mutex_unlock(&init_mutex);
@@ -80,6 +83,7 @@ void WlFFmpeg::decodeFFmpegThread() {
     if (!audio->codecContext) {
         if (LOG_DEBUG) {
             LOGE("can not alloc new decoderctx")
+            callJava->onCallError(CHILD_THREAD, 1004, "can not alloc new decoderctx");
         }
         exit = true;
         pthread_mutex_unlock(&init_mutex);
@@ -88,6 +92,7 @@ void WlFFmpeg::decodeFFmpegThread() {
     if (avcodec_parameters_to_context(audio->codecContext, audio->codePar) < 0) {
         if (LOG_DEBUG) {
             LOGE("can not fill decoderctx");
+            callJava->onCallError(CHILD_THREAD, 1005, "can not fill decoderctx");
         }
         exit = true;
         pthread_mutex_unlock(&init_mutex);
@@ -97,6 +102,7 @@ void WlFFmpeg::decodeFFmpegThread() {
     if (avcodec_open2(audio->codecContext, dec, 0) != 0) {
         if (LOG_DEBUG) {
             LOGE("can not open audio stream");
+            callJava->onCallError(CHILD_THREAD, 1006, "can not open audio stream");
         }
         exit = true;
         pthread_mutex_unlock(&init_mutex);
@@ -109,6 +115,7 @@ void WlFFmpeg::decodeFFmpegThread() {
 void WlFFmpeg::start() {
     if (audio == NULL) {
         if (LOG_DEBUG) {
+            callJava->onCallError(CHILD_THREAD, 1007, "audio is null");
             LOGE("audio is null");
         }
         return;
